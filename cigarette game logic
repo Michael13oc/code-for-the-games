@@ -1,0 +1,103 @@
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.SceneManagement;
+
+public class CigaretteAssembly : MonoBehaviour
+{
+    private List<string> playerSequence = new List<string>();
+    private readonly List<string> correctSequence = new List<string>
+    {
+        "Unroll Paper",
+        "Pour Tobacco",
+        "Press Tobacco",
+        "Roll Cigarette",
+        "Light Tip"
+    };
+
+    public int reputationPoints = 0;
+    public Text feedbackText;
+    public Image successImage;
+    public Button tryAgainButton; 
+    public string nextSceneName = "***"; 
+
+    //keeps track of the steps in the sequence
+    public void AddStep(string step)
+    {
+        step = step.Trim();
+        playerSequence.Add(step);
+
+        Debug.Log("Player Sequence: " + string.Join(", ", playerSequence));
+        CheckCompletion();
+    }
+    // checks if the completion state of the game
+    private void CheckCompletion()
+    {
+        if (playerSequence.Count == correctSequence.Count)
+        {
+            if (IsCorrectOrder())
+            {
+                reputationPoints += 5;
+                feedbackText.text = "Correct sequence! +5 Reputation Points";
+
+                if (successImage != null)
+                    successImage.gameObject.SetActive(true);
+
+                if (tryAgainButton != null)
+                    tryAgainButton.gameObject.SetActive(false); // hide if visible
+
+                Invoke("LoadNextScene", 2f);
+            }
+            else
+            {
+                feedbackText.text = "Sequence incorrect! Try again.";
+
+                if (successImage != null)
+                    successImage.gameObject.SetActive(false);
+
+                if (tryAgainButton != null)
+                    tryAgainButton.gameObject.SetActive(true); // show the try again button
+            }
+
+            playerSequence.Clear();
+        }
+    }
+    //checks if we get the correct sequence
+    private bool IsCorrectOrder()
+    {
+        for (int i = 0; i < correctSequence.Count; i++)
+        {
+            if (playerSequence[i] != correctSequence[i])
+            {
+                Debug.Log($"Mismatch at step {i + 1}: Expected '{correctSequence[i]}', got '{playerSequence[i]}'");
+                return false;
+            }
+        }
+        return true;
+    }
+    // reset the puzzle
+    public void OnTryAgain()
+    {
+        Debug.Log("Player clicked Try Again.");
+        if (tryAgainButton != null)
+            tryAgainButton.gameObject.SetActive(false);
+
+        playerSequence.Clear();
+        feedbackText.text = "";
+    }
+    private void OnAnimatorMove()
+    {
+       // move on to the next puzzle
+    }
+    private void LoadNextScene()
+    {
+        if (!string.IsNullOrEmpty(nextSceneName))
+        {
+            SceneManager.LoadScene(nextSceneName);
+        }
+        else
+        {
+            Debug.LogError("Next scene name not set!");
+        }
+    }
+}
